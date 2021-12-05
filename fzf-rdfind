@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Run rdfind on the current directory, then collect lines starting with "DUPTYPE"
+# and then output the 8th column to the end of each line to output the filename.
+rdfind . 1>/dev/null 2>&1
+# sed -n     : output only lines that match 
+# cut -d ' ' : delimiter is a space
+# cut -f 8-  : output the 8th column to the end of each line
+duplicate_files=$(cat results.txt | sed -n '/^DUPTYPE/p' | cut -d ' ' -f 8-)
+
+# Pass the list of files to fzf and allow multi-selection with SHIFT+TAB.
+# Use --no-sort to preserve the order of the files. They are grouped together by filename.
+files_to_delete=$(echo "$duplicate_files" | fzf --multi --no-sort)
+# surround each line with quotes
+files_to_delete=$(echo "$files_to_delete" | sed -e 's/^/"/' -e 's/$/"/')
+printf "💣 Files to delete:\n$files_to_delete\n\n"
+
+# Pass each line (which is a path to a file) to rm using xargs
+echo $files_to_delete | xargs rm
+
+echo "💥 Files deleted!"
